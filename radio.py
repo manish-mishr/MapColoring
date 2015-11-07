@@ -95,21 +95,7 @@ def lcv(state,assignment,frequency):
 		lcv_lst.append(choice)
 	return lcv_lst
 
-# Assign Frequency value to the State in the assignment dictionary
-def assign(state,value,assignment):
-	assignment[state]=value
 
-# In case of bactracking, remove the values from the assignment dictionary
-def delete_assign(state,assignment):
-	if state in assignment:
-		del assignment[state]
-
-# Check if new assignment causes a conflict with existing assignment of neighboring states
-def Isconflict(state,value,assignment):
-	for state in neighbors[state]:
-		if state in assignment and assignment[state] == value:
-			return True
-	return False	
 
 # Temporary assign the value to a state. Remove the rest of the frequency from state's domain,append it to a list and return the list
 def temp_assign(state,value,frequency):
@@ -120,11 +106,7 @@ def temp_assign(state,value,frequency):
 	frequency[state]= [value]
 	return remove_freq
 
-# In case of backtrack, append the removed frequency from the state's domain
-def reassign(remove_lst,frequency):
-	for k in remove_lst:
-		(state,val) = k
-		frequency[state].append(val)
+
 
 # Count the number of future conflicts caused by the possible assignment of the frequency to the state.
 def count_conflicts(state,choice,frequency,assignment):
@@ -182,22 +164,30 @@ def myfunc():
 # Main backtracking function that assigns values to a state and checks whether this assignment violates the constraint or not.
 # If an assignment violates the constraints, function removes the assignment and backtrack to try another assignment. This function
 # is same as given in textbook and ucb's video lecture.	
-def backtrack(assignment,frequency):
+def assign(assignment,frequency):
+	global neighbors
 	myfunc.counter = 0
 	if len(assignment) == len(frequency):
 		return assignment
 	state = mrv(assignment, frequency)
-	for freq in lcv(state, assignment,frequency):
-		if False == Isconflict(state, freq, assignment):
-			assign(state, freq, assignment)
-			remove_lst = temp_assign(state, freq,frequency)
-			if arc_consistent(assignment, frequency,state, remove_lst):
-				result = backtrack(assignment,frequency)
-				if result != None:
-					return result
-			reassign(remove_lst,frequency)
-	myfunc()							# Counting the no. of backtracks
-	delete_assign(state, assignment)
+	choices = lcv(state,assignment,frequency)
+	invalid = False
+	for freq in choices:
+		for neighbor in neighbors[state]:
+			if neighbor in assignment and assignment[neighbor] == freq:
+				invalid = True
+			if invalid == False:
+				assignment[state] = freq
+				removal_lst = temp_assign(state,freq,frequency)
+				if arc_consistent(assignment,frequency,state,removal_lst) == True:
+					if (assign(assignment,frequency)) != None:
+						return True
+				for k in remove_lst:
+					(state,val) = k
+					frequency[state].append(val)
+	myfunc()
+	if state in assignment:
+		del assignment[state] 
 	return None
 
 # with given constraints, this function search for the solution and report if it does not exist.
@@ -206,13 +196,12 @@ def search_solution(frequency):
 	for state in frequency:					# Here all those states, which has just one frequency in their domain, have 
 		if len(frequency[state])== 1:			# been assigned to the assignment dictionary and then checking it's consistency
 			value = (frequency[state])[0]		
-			assign(state,value,assignment)
-	
+			assignment[state] = value
 	if arc_consistent(assignment,frequency) == False:	# If legacy_constraints provides such values that no assignment is feasible
 		print " No Solution is Feasible"		# satisfying the constraints, then no solution can be predicted at this stage
 
 	
-	if backtrack(assignment,frequency) == None :
+	if assign(assignment,frequency) == None :
 		print " No assignment is valid"
 	else:	
 		with open("results.txt","w") as file:
