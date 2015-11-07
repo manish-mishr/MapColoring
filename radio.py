@@ -156,7 +156,7 @@ def arc_consistent(assignment,frequency,state=None,remove_lst=None):
 	while not myqueue.empty():
 		(state,neighbor) = myqueue.get()
 		if remove_inconsistent(state,neighbor,remove_lst):
-			if frequency[state] == []:
+			if len(frequency[state]) == 0:
 				return False
 			for new_neigh in neighbors[state]:
 				myqueue.put((new_neigh,state))
@@ -180,7 +180,8 @@ def myfunc():
 		
 
 # Main backtracking function that assigns values to a state and checks whether this assignment violates the constraint or not.
-# If an assignment violates the constraints, function removes the assignment and backtrack to try another assignment.	
+# If an assignment violates the constraints, function removes the assignment and backtrack to try another assignment. This function
+# is same as given in textbook and ucb's video lecture.	
 def backtrack(assignment,frequency):
 	myfunc.counter = 0
 	if len(assignment) == len(frequency):
